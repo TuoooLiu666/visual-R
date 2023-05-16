@@ -1,0 +1,56 @@
+---
+title: "boxplot+dot+line"
+output: html_document
+date: "2023-04-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(ggplot2, ggbeeswarm, dplyr, tidyr)
+```
+
+```{r}
+# data prepare
+data <- data.frame(runif(30,0,1),
+                    runif(30,0.8,1),
+                    runif(30,0.8,1),
+                    runif(30,0.25,0.85),
+                    runif(30,0,0.7),
+                    runif(30,0,0.5),
+                    runif(30,0,0.1))
+row.names(data)<- paste0('sample',1:30)
+colnames(data) <- paste0('time',1:7)
+data$sample = row.names(data)
+
+head(data)
+
+# wide to long
+dt_plot <- tidyr::gather(data, time, value,-sample)
+head(dt_plot)
+# calculate grouped medians
+median =  data.frame(time =  paste0('time',1:7) ,
+                     median = tapply(dt_plot$value, dt_plot$time, median) )
+head(median)
+
+## plot
+ggplot(dt_plot,aes(time,value))+
+  geom_boxplot()+
+  geom_beeswarm(shape = 21,color = '#9ca7ce',fill = '#9ca7ce',
+                size = 3.5,cex = 1.5,
+                stroke = 0.6,alpha = 0.8)+
+  geom_line(data = median,
+            mapping = aes(x = time, y = median, group=1),
+            color="black",linetype = 'longdash',linewidth = 2)+
+  theme_bw()+
+  labs(x = "", y = "")+
+  ggtitle("My Plot Title")+
+  theme(axis.text.x = element_text(color="black",size=14),
+        axis.text.y=element_text(color="black",size=14),
+        plot.title = element_text(size = 14, face = "bold", color = "black"),
+        panel.border = element_rect(fill=NA,color="black", size=1, linetype="solid"))
+
+ggsave('boxlpotwithline.pdf',width = 5,height = 5)
+```
+
+
+
