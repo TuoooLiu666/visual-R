@@ -1,0 +1,150 @@
+---
+title: "Complex heatmap"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+pacman::p_load(ggcor, ggplot2, patchwork, vegan, ambient, ComplexHeatmap)
+```
+
+
+## ggcor + ggplot
+```{r}
+# layer of tile
+A <- quickcor(mtcars) + geom_colour()
+A
+# layer of circle and trim the lower triangle
+B <- quickcor(mtcars, type = "upper") + geom_circle2() # shape define
+B
+# layer of ellipse and not show diagonal
+C <- quickcor(mtcars, type = "lower", show.diag = FALSE) + geom_ellipse2()
+C
+# layer of square and reorder correlation matrix by cluster
+D <- quickcor(mtcars, cluster = TRUE) + geom_square()
+D
+# layer of confidence box
+E <- quickcor(mtcars, cor.test = TRUE) + geom_confbox()
+E
+# different layer of upper/lower triangle
+F <- quickcor(mtcars, cor.test = TRUE) +
+  geom_square(data = get_data(type = "lower", show.diag = FALSE)) +
+  geom_mark(data = get_data(type = "upper", show.diag = FALSE)) +
+  geom_abline(slope = -1, intercept = 12)
+F
+
+(A+B+C)/(E+D+F) + plot_annotation(tag_levels = 'A')
+```
+### Complex heatmap: vegan
+```{r}
+data("varechem", package = "vegan")
+data("varespec", package = "vegan")
+
+# Mantel.test 检验计算矩阵相关性
+mantel <- mantel_test(varespec, varechem, mantel.fun = 'mantel.randtest',spec.dist.method = 'bray', env.dist.method = 'euclidean', 
+                      spec.select = list(Spec01 = 1:7,
+                                         Spec02 = 8:18,
+                                         Spec03 = 19:37
+                                                   )) %>% 
+  mutate(r_value = cut(r, breaks = c(-Inf, 0.25, 0.5, Inf), 
+                   labels = c('<0.25', '0.25-0.5', '>=0.5'), right = FALSE),
+         p_value = cut(p.value, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                       labels = c('<0.001', '0.001-0.01', '0.01-0.05', '>=0.05'), right = FALSE))
+
+quickcor(varechem, type = "upper") +
+  geom_square() +
+  anno_link(aes(colour = p_value, size = r_value), data = mantel) +
+  scale_size_manual(values = c(0.5, 1, 2)) +
+  scale_colour_manual(values = c("#D95F02", "#1B9E77", "#A2A2A288")) +
+  guides(size = guide_legend(title = "Mantel's r",
+                             override.aes = list(colour = "grey35"), 
+                             order = 2),
+         colour = guide_legend(title = "Mantel's p", 
+                               override.aes = list(size = 3), 
+                               order = 1),
+         fill = guide_colorbar(title = "Pearson's r", order = 3))
+```
+
+### Complex heatmap: ComplexHeatmap
+```{r}
+library(ComplexHeatmap)
+library(circlize)
+library(RColorBrewer)
+```
+#### The measles vaccine heatmap
+```{r}
+mat = readRDS(system.file("extdata", "measles.rds", package = "ComplexHeatmap"))
+ha1 = HeatmapAnnotation(
+    dist1 = anno_barplot(
+        colSums(mat), 
+        bar_width = 1, 
+        gp = gpar(col = "white", fill = "#FFE200"), 
+        border = FALSE,
+        axis_param = list(at = c(0, 2e5, 4e5, 6e5, 8e5),
+            labels = c("0", "200k", "400k", "600k", "800k")),
+        height = unit(2, "cm")
+    ), show_annotation_name = FALSE)
+
+ha2 = rowAnnotation(
+    dist2 = anno_barplot(
+        rowSums(mat), 
+        bar_width = 1, 
+        gp = gpar(col = "white", fill = "#FFE200"), 
+        border = FALSE,
+        axis_param = list(at = c(0, 5e5, 1e6, 1.5e6),
+            labels = c("0", "500k", "1m", "1.5m")),
+        width = unit(2, "cm")
+    ), show_annotation_name = FALSE)
+
+year_text = as.numeric(colnames(mat))
+year_text[year_text %% 10 != 0] = ""
+ha_column = HeatmapAnnotation(
+    year = anno_text(year_text, rot = 0, location = unit(1, "npc"), just = "top")
+)
+
+col_fun = colorRamp2(c(0, 800, 1000, 127000), c("white", "cornflowerblue", "yellow", "red"))
+ht_list = Heatmap(mat, name = "cases", col = col_fun,
+    cluster_columns = FALSE, show_row_dend = FALSE, rect_gp = gpar(col= "white"), 
+    show_column_names = FALSE,
+    row_names_side = "left", row_names_gp = gpar(fontsize = 8),
+    column_title = 'Measles cases in US states 1930-2001\nVaccine introduced 1961',
+    top_annotation = ha1, bottom_annotation = ha_column,
+    heatmap_legend_param = list(at = c(0, 5e4, 1e5, 1.5e5), 
+        labels = c("0", "50k", "100k", "150k"))) + ha2
+
+draw(ht_list, ht_gap = unit(3, "mm"))
+decorate_heatmap_body("cases", {
+    i = which(colnames(mat) == "1961")
+    x = i/ncol(mat)
+    grid.lines(c(x, x), c(0, 1), gp = gpar(lwd = 2, lty = 2))
+    grid.text("Vaccine introduced", x, unit(1, "npc") + unit(5, "mm"))
+})
+
+
+# pdf('measles_vaccine_heatmap.pdf',width = 12,height = 10)
+# draw(ht_list, ht_gap = unit(3, "mm"))
+# decorate_heatmap_body("cases", {
+#     i = which(colnames(mat) == "1961")
+#     x = i/ncol(mat)
+#     grid.lines(c(x, x), c(0, 1), gp = gpar(lwd = 2, lty = 2))
+#     grid.text("Vaccine introduced", x, unit(1, "npc") + unit(5, "mm"))
+# })
+# dev.off()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
