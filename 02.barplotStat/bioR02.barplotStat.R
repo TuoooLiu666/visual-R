@@ -1,13 +1,13 @@
-#设置工作目录
+# 设置工作目录
 setwd("D:\\biowolf\\bioR\\02.barplotStat")
 
-#读取输入文件
+# 读取输入文件
 rt=read.table("input.txt", header=T, sep="\t",comment.char = "", check.names =FALSE)
 tb=table(c(as.vector(rt[,1]),as.vector(rt[,2])))    #对两列进行统计
 #tb=table(as.vector(rt[,1]))        #对一列进行统计//不用的代码加#
 tb=sort(tb,decreasing =T) #频率高的排前面
 
-#输入每个基因的邻接点节点数目
+# 输入每个基因的邻接点节点数目
 outTab=as.data.frame(tb)
 colnames(outTab)=c("Gene","Count")
 write.table(outTab,file="statResult.xls",sep="\t",quote=F,row.names=F)

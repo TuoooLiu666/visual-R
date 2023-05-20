@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ComplexHeatmap)
 library(dplyr)
 
-# 构造数据：创建4组相关系数；
+# create df：4-way correlation matrix；
 data <- data.frame(Control = runif(44, min = -1, max = 1),
                   PD = runif(44, min = -1, max = 1),
                   AD_PD = runif(44, min = -1, max = 1),
@@ -27,7 +27,7 @@ data <- t(data)
 # AD_PD    0.41983811  0.06117967  0.004657003 -0.1992623  0.36452314
 # AD      -0.03745337 -0.23319219  0.063517675  0.7082907 -0.41313420
 
-# p值矩阵：随机创建一个逻辑型矩阵就好；
+# p-value matrix：create a logic matrix；
 p_mat <- as.data.frame(matrix(sample(c(T,F), size = 44*4, replace = T), 4, 44))
 p_mat[,1:5]
 ```
@@ -49,7 +49,7 @@ top_anno <- HeatmapAnnotation(Module = colnames(data),
                               # 去除图例：
                               show_legend = F)
 
-# 绘图：
+# plot：
 pdf("plots.pdf", height = 3, width = 10)
 Heatmap(data,
         # 行不聚类：
