@@ -1,6 +1,5 @@
 ## setup
 dir = "~/Documents/learn/visuals-R/"
-setwd(paste0(dir,"40.radar-2")) 
 pacman::p_load(ggplot2, dplyr, stringr)
 
 ## load data
@@ -180,9 +179,5 @@ plt <- plt +
   )
 
 ## save it
-# Set the graphics device explicitly
-png("radar.png", width = 9, height = 12.6)
-plt
-# Save the plot
-dev.off()
-
+ggsave("C:/Users/tuooo/OneDrive/Desktop/visual-R/40.radar/radar.png", 
+       plt,width=9, height=12.6)
