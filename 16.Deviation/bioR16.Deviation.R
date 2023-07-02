@@ -5,7 +5,8 @@
 library(ggpubr)              
 inputFile="input.txt"        
 outFile="Deviation.pdf"      
-setwd("D:\\biowolf\\bioR\\16.Deviation")    
+dir = "~/Documents/learn/visuals-R/"
+setwd(paste0(dir,"07.boxplotDiff"))  
 
 #读取
 rt=read.table(inputFile,sep="\t",header=T,check.names=F)
@@ -15,6 +16,7 @@ colnames(rt)=c("Name","Value")
 rt$Regulate=factor(ifelse(rt$Value<0, "Down", "Up"), levels = c("Up", "Down"))
 
 #绘制
+library(ggplot2)
 pdf(file=outFile,width=6,height=5)
 ggbarplot(rt, x="Name", y="Value", fill = "Regulate", color = "white", 
           palette = "jco", 

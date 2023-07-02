@@ -4,7 +4,8 @@
 library(ggpubr)            #引用包
 inputFile="input.txt"      #输入文件
 outFile="boxplot.pdf"      #输出文件
-setwd("D:\\biowolf\\bioR\\07.boxplotDiff")     #修改工作目录
+dir = "~/Documents/learn/visuals-R/"
+setwd(paste0(dir,"07.boxplotDiff")) 
 
 #读取输入文件，并对输入文件整理
 rt=read.table(inputFile,sep="\t",header=T,check.names=F)
