@@ -1,5 +1,5 @@
 ## setup
-dir = "~/Documents/learn/visuals-R/"
+dir = "~/Documents/learn/visuals-R/" # change it to correct dir
 pacman::p_load(ggplot2, dplyr, stringr)
 
 ## load data
